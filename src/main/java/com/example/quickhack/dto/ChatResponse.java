@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatResponse {
     private String status;
-    private BaseGPTResponse data;
+    private IDCardGPTResponse data;
 
     public ChatResponse(String status) {
         this.status = status;

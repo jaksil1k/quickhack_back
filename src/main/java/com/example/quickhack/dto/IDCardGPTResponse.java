@@ -1,8 +1,15 @@
 package com.example.quickhack.dto;
 
-import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-public class IDCardGPTResponse extends BaseGPTResponse{
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class IDCardGPTResponse {
     private String iin;
     private String full_name;
     private String birthday;
