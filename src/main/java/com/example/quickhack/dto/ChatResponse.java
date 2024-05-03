@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class ChatResponse {
     private String status;
     private IDCardGPTResponse data;
+    private String message;
 
     public ChatResponse(String status) {
         this.status = status;

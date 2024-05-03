@@ -31,15 +31,15 @@ public class GPTController {
     private final RestTemplate template;
 
     private final IDCardService idCardService;
-    @PostMapping(path="/chat", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<ChatResponse> chat(@RequestParam String type, @RequestPart MultipartFile file) {
-        ChatRequest chatRequest = new ChatRequest(type, file);
+
+    @PostMapping(path = "/chat", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ChatResponse> chat(@RequestParam(required = false) String type, @RequestPart MultipartFile file) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("purpose", "assistants");
-        body.add("file", chatRequest.getFile().getResource());
+        body.add("file", file.getResource());
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         FileResponse fileResponse = template.postForEntity(baseUrl + "/files", requestEntity, FileResponse.class).getBody();
         System.out.println(fileResponse);
@@ -47,30 +47,19 @@ public class GPTController {
         if (fileResponse == null || fileResponse.getId() == null) {
             return ResponseEntity.ok(new ChatResponse("NOT_DOC"));
         }
-        GPTRequest request = new GPTRequest(model, fileResponse.getId());
-        ChatResponse response = null;
-        if (chatRequest.getType().equals("IDCard")) {
-            template.getInterceptors().add(((request2, body2, execution) -> {
-                request2.getHeaders().add("OpenAI-Beta", "assistants=v2");
-                return execution.execute(request2, body2);
-            }));
-             response = template.postForObject(baseUrl + "/assistance", request, ChatResponse.class);
-        }
-        else {
-            response = new ChatResponse("TYPE_NOT_SUPPORTED");
-        }
-        return ResponseEntity.ok(new ChatResponse("OK", response.getData()));
+        String url = "http://localhost:8000/file-vs?file_id=" + fileResponse.getId();
+
+        return ResponseEntity.ok(template.postForObject(url, "", ChatResponse.class));
     }
 
-    @PostMapping(path="/chat2", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<ChatResponse> chat2(@RequestParam String type, @RequestPart MultipartFile file) {
-        ChatRequest chatRequest = new ChatRequest(type, file);
+    @PostMapping(path = "/chat2", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ChatResponse> chat2(@RequestParam(required = false) String type, @RequestPart MultipartFile file) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("purpose", "assistants");
-        body.add("file", chatRequest.getFile().getResource());
+        body.add("file", file.getResource());
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         FileResponse fileResponse = template.postForEntity(baseUrl + "/files", requestEntity, FileResponse.class).getBody();
         System.out.println(fileResponse);
@@ -78,8 +67,6 @@ public class GPTController {
         if (fileResponse == null || fileResponse.getId() == null) {
             return ResponseEntity.ok(new ChatResponse("NOT_DOC"));
         }
-
-
         String url = "http://localhost:8000/file?file_id=" + fileResponse.getId();
 //        Map<String, String> params = new HashMap<String, String>();
         ChatResponse response = template.postForObject(url, "", ChatResponse.class);
@@ -110,42 +97,4 @@ public class GPTController {
     public Optional<IDCard> getIDCard(@RequestParam String id) {
         return idCardService.getById(id);
     }
-//    public static ChatResponse parseJson(String json) {
-////        StringBuilder newJson = new StringBuilder();
-////        for (int i = 0;i < json.length();++i) {
-////            if (json.charAt(i) == '\\') {
-////                if (json.charAt(i + 1) == 'n') {
-////                    i += 2;
-////                }
-////            }
-////            newJson.append(json.charAt(i));
-////        }
-////        json = newJson.toString();
-//        ObjectMapper objectMapper = new ObjectMapper();
-//
-//        try {
-//            // Parse JSON string to JsonNode
-//            System.out.println(json);
-//            JsonNode rootNode = objectMapper.readTree(json);
-//
-//            // Get values from JsonNode
-//            String status = rootNode.get("status").asText();
-//            System.out.println(status);
-//            if (status.equals("error")) {
-//                return new ChatResponse("error");
-//            }
-//            JsonNode dataNode = rootNode.get("data");
-//            String iin = dataNode.get("iin").asText();
-//            String fullname = dataNode.get("fullname").asText();
-//            String birthday = dataNode.get("birthday").asText();
-//            String cardId = dataNode.get("card_id").asText();
-//            String givenDate = dataNode.get("given_date").asText();
-//            String expirationDate = dataNode.get("expiration_date").asText();
-//
-//            return new ChatResponse(status, new IDCardGPTResponse(iin, fullname, birthday, cardId, givenDate, expirationDate));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return new ChatResponse("error");
-//    }
 }
